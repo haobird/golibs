@@ -1,4 +1,4 @@
-module golibs
+module github.com/haobird/golibs
 
 go 1.15
 
