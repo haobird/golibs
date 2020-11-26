@@ -6,19 +6,11 @@ package utils
 import (
 	"bufio"
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
-	"image/jpeg"
-	"image/png"
-	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"time"
-
-	"github.com/spf13/viper"
 
 	"github.com/gin-gonic/gin"
 	"github.com/teris-io/shortid"
@@ -147,88 +139,4 @@ func jsonPrettyPrint(in string) string {
 		return in
 	}
 	return out.String()
-}
-
-//ImageToBase64 图片转64
-func ImageToBase64(path string, isUrl bool, imageType ...string) (string, error) {
-	var (
-		stream io.Reader
-		err    error
-	)
-	if isUrl {
-		var res *http.Response
-		res, err = http.Get(path)
-		if err == nil {
-			stream = res.Body
-		}
-	} else {
-		stream, err = os.Open(path)
-	}
-	if err != nil {
-		return "", err
-	}
-	data, err := ioutil.ReadAll(stream)
-	imTyp := "jpeg"
-	if imageType != nil {
-		imTyp = imageType[0]
-	}
-	switch imTyp {
-	case "jpeg":
-		data, err = ToJpeg(data)
-	case "png":
-		data, err = ToPng(data)
-	}
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(data), nil
-}
-
-//GetMinioUrl 获取文件地址
-func GetMinioUrl(fileName string) string {
-	if fileName == "" {
-		return ""
-	}
-	conf := viper.GetStringMap("minio")
-	return fmt.Sprintf("http://%s/%s/%s", conf["endpoint"], conf["bucket"], fileName)
-}
-
-func ToPng(imageBytes []byte) ([]byte, error) {
-	contentType := http.DetectContentType(imageBytes)
-	switch contentType {
-	case "image/png":
-		return imageBytes, nil
-	case "image/jpeg":
-		img, err := jpeg.Decode(bytes.NewReader(imageBytes))
-		if err != nil {
-			return nil, err
-		}
-
-		buf := new(bytes.Buffer)
-		if err := png.Encode(buf, img); err != nil {
-			return nil, err
-		}
-		return buf.Bytes(), nil
-	}
-	return nil, fmt.Errorf("unable to convert %#v to png", contentType)
-}
-
-func ToJpeg(imageBytes []byte) ([]byte, error) {
-	contentType := http.DetectContentType(imageBytes)
-	switch contentType {
-	case "image/png":
-		img, err := png.Decode(bytes.NewReader(imageBytes))
-		if err != nil {
-			return nil, err
-		}
-
-		buf := new(bytes.Buffer)
-		if err := jpeg.Encode(buf, img, &jpeg.Options{Quality: 90}); err != nil {
-			return nil, err
-		}
-		return buf.Bytes(), nil
-	case "image/jpeg":
-		return imageBytes, nil
-	}
-	return nil, fmt.Errorf("unable to convert %#v to jpeg", contentType)
 }
