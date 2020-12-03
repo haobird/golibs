@@ -7,13 +7,18 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/xinliangnote/go-util/md5"
+	"github.com/haobird/golibs/md5f"
 )
 
 //Encrypt 加密字符串
 func Encrypt(params map[string]interface{}) string {
 	// 摘取出AppSecret参数
 	secretName := "AppSecret"
+	return EncryptSpecial(params, secretName)
+}
+
+//EncryptSpecial 特殊指定
+func EncryptSpecial(params map[string]interface{}, secretName string) string {
 	secretStr := ""
 	if val, exist := params[secretName]; exist {
 		secretStr = "&" + secretName + "=" + val.(string)
@@ -21,8 +26,7 @@ func Encrypt(params map[string]interface{}) string {
 	}
 	str := order(params)
 	str = str + secretStr
-	fmt.Println(str)
-	str = md5.MD5(str)
+	str = md5f.MD5(str)
 	return strings.ToUpper(str)
 }
 
@@ -41,6 +45,5 @@ func order(params map[string]interface{}) string {
 			str = str + fmt.Sprintf("&%v=%v", key[i], params[key[i]])
 		}
 	}
-	fmt.Println(str)
 	return str
 }
