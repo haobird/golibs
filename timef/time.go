@@ -1,4 +1,4 @@
-package utils
+package timef
 
 import "time"
 
@@ -21,6 +21,16 @@ func GetTime() time.Time {
 //GetTimeString 格式化为： 20060102150405
 func GetTimeString(t time.Time) string {
 	return t.Format(TIMEFORMAT)
+}
+
+//GetCurrentUnix 获取当前时间的秒
+func GetCurrentUnix() int64 {
+	return time.Now().Unix()
+}
+
+//GetCurrentMills 转为时间戳: 毫秒数
+func GetCurrentMills() int64 {
+	return time.Now().UnixNano() / 1e6
 }
 
 //GetNormalTimeString 格式化为：2006-01-02 15:04:05
