@@ -8,8 +8,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/haobird/golibs/md5f"
 )
 
 const (
@@ -53,7 +51,7 @@ func md5V(str string) string {
 }
 
 func encrypt(str string) string {
-	str = md5f.MD5(str)
+	str = md5V(str)
 	return strings.ToUpper(str)
 }
 
