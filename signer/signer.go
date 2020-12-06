@@ -108,8 +108,6 @@ func (slf *Signer) GetSignRawString() string {
 	bodyStr := slf.GetBodyString()
 	// secret := slf.GetAppSecret()
 	secret := slf.secretVal
-	fmt.Println("密钥")
-	fmt.Println(secret)
 	if secret != "" {
 		bodyStr = bodyStr + "&" + slf.keyNameAppSecret + "=" + secret
 	}
@@ -194,9 +192,8 @@ func (slf *Signer) CheckTimeStamp() error {
 		thatTime = time.Unix(0, timeInt*int64(time.Millisecond))
 	}
 
-	fmt.Println(thatTime)
 	if time.Now().Sub(thatTime) > slf.timeout {
-		return fmt.Errorf("TIMESTAMP_TIMEOUT:<%s>", timestamp)
+		return fmt.Errorf("TIMESTAMP_TIMEOUT:<%v>-<%s>", thatTime, timestamp)
 	}
 	return nil
 }

@@ -3,9 +3,11 @@ package signer
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"math/rand"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -73,4 +75,47 @@ func SortKVPairs(m url.Values) string {
 		pairs[i] = key + "=" + strings.Join(m[key], ",")
 	}
 	return strings.Join(pairs, "&")
+}
+
+//String change val type to string
+func String(val interface{}) string {
+	if val == nil {
+		return ""
+	}
+
+	switch t := val.(type) {
+	case bool:
+		return strconv.FormatBool(t)
+	case int:
+		return strconv.FormatInt(int64(t), 10)
+	case int8:
+		return strconv.FormatInt(int64(t), 10)
+	case int16:
+		return strconv.FormatInt(int64(t), 10)
+	case int32:
+		return strconv.FormatInt(int64(t), 10)
+	case int64:
+		return strconv.FormatInt(t, 10)
+	case uint:
+		return strconv.FormatUint(uint64(t), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(t), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(t), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(t), 10)
+	case uint64:
+		return strconv.FormatUint(t, 10)
+	case float32:
+		return strconv.FormatFloat(float64(t), 'f', -1, 32)
+	case float64:
+		return strconv.FormatFloat(t, 'f', -1, 64)
+	case []byte:
+		return string(t)
+	case string:
+		return t
+	default:
+		data, _ := json.Marshal(val)
+		return string(data)
+	}
 }

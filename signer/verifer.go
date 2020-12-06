@@ -3,7 +3,6 @@ package signer
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"time"
 )
@@ -106,7 +105,6 @@ func VerifyWithOption(values url.Values, opt Option) error {
 	// 校验时间
 	err = v.CheckTimeStamp()
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -115,7 +113,6 @@ func VerifyWithOption(values url.Values, opt Option) error {
 	// 校验签名
 	err = v.CheckSignature()
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	// 校验通过
@@ -160,12 +157,12 @@ func ParseJSON(buf []byte) (url.Values, error) {
 	d := json.NewDecoder(bytes.NewReader(buf))
 	d.UseNumber()
 	_ = d.Decode(&f)
-	fmt.Println(f)
-	var str = ""
-	fmt.Println("打印")
-	fmt.Println(str)
-	str, _ = url.QueryUnescape(str)
-	fmt.Println(str)
+
+	// 循环处理为values格式
+	for key, val := range f {
+		temp := String(val)
+		m[key] = []string{temp}
+	}
 
 	return m, nil
 }

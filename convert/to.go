@@ -1,6 +1,7 @@
 package convert
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 )
@@ -54,7 +55,8 @@ func String(val interface{}) string {
 	case string:
 		return t
 	default:
-		return fmt.Sprintf("%v", val)
+		data, _ := json.Marshal(val)
+		return string(data)
 	}
 }
 
