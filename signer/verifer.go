@@ -119,6 +119,19 @@ func VerifyWithOption(values url.Values, opt Option) error {
 	return err
 }
 
+//Debug 检验
+func Debug(values url.Values) map[string]string {
+	return DebugWithOption(values, Option{})
+}
+
+//DebugWithOption 校验配置
+func DebugWithOption(values url.Values, opt Option) map[string]string {
+	// 创建签名对象
+	v := NewSigner(opt)
+	v.Init(values)
+	return v.Debug()
+}
+
 // ParseCfg 解析配置
 func ParseCfg(opt Option) Option {
 	// 如果不存在，则赋值默认的

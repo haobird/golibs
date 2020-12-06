@@ -137,7 +137,7 @@ func (slf *Signer) getSortedBodyString() string {
 
 // Debug 调试
 func (slf *Signer) Debug() map[string]string {
-	var arr map[string]string
+	arr := make(map[string]string)
 	arr["sortBodyStr"] = slf.GetBodyString()
 	arr["signature"] = slf.GetSignature()
 	arr["signRawString"] = slf.GetSignRawString()
