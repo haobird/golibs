@@ -65,6 +65,7 @@ func NewSigner(opt Option) *Signer {
 		otherFields:    opt.OtherFields,
 		skippedFields:  opt.SkippedFields,
 		timeout:        opt.Timeout,
+		secretVal:      opt.SecretVal,
 		// bodyPrefix:     opt.bodyPrefix,
 		// bodySuffix:     opt.bodySuffix,
 	}
