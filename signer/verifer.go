@@ -103,10 +103,13 @@ func VerifyWithOption(values url.Values, opt Option) error {
 	// 校验
 	var err error
 	// 验证字符串是否齐全
-	// 校验时间
-	err = v.CheckTimeStamp()
-	if err != nil {
-		return err
+
+	if opt.KeyNameTimestamp != "" {
+		// 校验时间
+		err = v.CheckTimeStamp()
+		if err != nil {
+			return err
+		}
 	}
 
 	// 校验随机字符串
