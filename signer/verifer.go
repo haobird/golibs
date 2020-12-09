@@ -137,13 +137,13 @@ func DebugWithOption(values url.Values, opt Option) map[string]string {
 func ParseCfg(opt Option) Option {
 	// 如果不存在，则赋值默认的
 	if opt.KeyNameTimestamp == "" {
-		opt.KeyNameTimestamp = KeyNameTimeStamp
+		// opt.KeyNameTimestamp = KeyNameTimeStamp
 	}
 	if opt.KeyNameNonceStr == "" {
-		opt.KeyNameNonceStr = KeyNameNonceStr
+		// opt.KeyNameNonceStr = KeyNameNonceStr
 	}
 	if opt.KeyNameAppID == "" {
-		opt.KeyNameAppID = KeyNameAppID
+		// opt.KeyNameAppID = KeyNameAppID
 	}
 	if opt.KeyNameSign == "" {
 		opt.KeyNameSign = KeyNameSign

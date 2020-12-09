@@ -28,11 +28,11 @@ type Signer struct {
 func (slf *Signer) Init(values url.Values) {
 	slf.ParseValues(values)
 	// 完善需要加签的字段
-	if _, ok := slf.body[slf.keyNameTimestamp]; !ok {
+	if _, ok := slf.body[slf.keyNameTimestamp]; !ok && slf.keyNameTimestamp != "" {
 		slf.SetTimeStamp(time.Now().Unix())
 	}
 
-	if _, ok := slf.body[slf.keyNameNonceStr]; !ok {
+	if _, ok := slf.body[slf.keyNameNonceStr]; !ok && slf.keyNameNonceStr != "" {
 		slf.RandNonceStr()
 	}
 
@@ -154,7 +154,7 @@ func (slf *Signer) GetBody() url.Values {
 
 //FilterFields 过滤字段
 func (slf *Signer) FilterFields() url.Values {
-	var validBody map[string][]string
+	validBody := make(map[string][]string)
 	// 如果指定了加签名字段，则优先使用加签名字段
 	if len(slf.otherFields) > 0 {
 		fields := slf.MustHasKeys()
@@ -201,7 +201,8 @@ func (slf *Signer) CheckTimeStamp() error {
 
 // MustHasKeys 必须包含指定的字段参数
 func (slf *Signer) MustHasKeys() []string {
-	fields := []string{slf.keyNameTimestamp, slf.keyNameNonceStr, slf.keyNameSign, slf.keyNameAppID}
+	// fields := []string{slf.keyNameTimestamp, slf.keyNameNonceStr, slf.keyNameSign, slf.keyNameAppID}
+	fields := []string{}
 	fields = append(slf.otherFields, fields...)
 	return fields
 }
