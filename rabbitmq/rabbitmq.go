@@ -168,12 +168,9 @@ func (r *RabbitMQ) NewConsumer(qe QueueExchange) *Consumer {
 
 //Receive 消费消息
 func (c *Consumer) Receive(h MsgHandle) {
-	i := 0
 	for {
 		msg := <-c.cns.Deliveries()
 		h(msg)
-		i++
-		fmt.Println(i)
 	}
 }
 
