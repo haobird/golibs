@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"fmt"
 
-	"github.com/haobird/golibs/cony"
+	"github.com/assembla/cony"
 	"github.com/streadway/amqp"
 )
 
