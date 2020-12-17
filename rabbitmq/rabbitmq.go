@@ -72,7 +72,17 @@ func (r *RabbitMQ) BindQueue(exchangeName, exchangeType, routingKey, queueName s
 		ExchangeType: exchangeType,
 	}
 	de := r.Declare(qe)
-	r.Bind(de)
+	if qe.QueueName == "" {
+		r.cli.Declare([]cony.Declaration{
+			cony.DeclareExchange(de.exc),
+		})
+	} else {
+		r.cli.Declare([]cony.Declaration{
+			cony.DeclareQueue(de.que),
+			cony.DeclareExchange(de.exc),
+			cony.DeclareBinding(de.bnd),
+		})
+	}
 }
 
 //Declare 定义队列或交换机
