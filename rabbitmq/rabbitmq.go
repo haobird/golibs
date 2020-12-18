@@ -56,6 +56,19 @@ func New(addr string) *RabbitMQ {
 		cony.Backoff(cony.DefaultBackoff),
 	)
 
+	// Client loop sends out declarations(exchanges, queues, bindings
+	// etc) to the AMQP server. It also handles reconnecting.
+	go func() {
+		for cli.Loop() {
+			select {
+			case err := <-cli.Errors():
+				fmt.Printf("Client error: %v\n", err)
+			case blocked := <-cli.Blocking():
+				fmt.Printf("Client is blocked %v\n", blocked)
+			}
+		}
+	}()
+
 	rmq := &RabbitMQ{
 		cli:  cli,
 		addr: addr,
@@ -127,10 +140,7 @@ func (r *RabbitMQ) Bind(de Declarer) {
 func (r *RabbitMQ) NewConsumer(qe QueueExchange) *Consumer {
 	// Construct new client with the flag url
 	// and default backoff policy
-	cli := cony.NewClient(
-		cony.URL(r.addr),
-		cony.Backoff(cony.DefaultBackoff),
-	)
+	cli := r.cli
 
 	// Declarations
 	de := r.Declare(qe)
@@ -147,17 +157,6 @@ func (r *RabbitMQ) NewConsumer(qe QueueExchange) *Consumer {
 	)
 
 	cli.Consume(cns)
-
-	go func() {
-		for cli.Loop() {
-			select {
-			case err := <-cns.Errors():
-				fmt.Printf("Consumer error: %v\n", err)
-			case err := <-cli.Errors():
-				fmt.Printf("Consumer Client error: %v\n", err)
-			}
-		}
-	}()
 
 	return &Consumer{
 		cli: cli,
@@ -178,10 +177,7 @@ func (c *Consumer) Receive(h MsgHandle) {
 func (r *RabbitMQ) NewPublisher(qe QueueExchange) *Publisher {
 	// Construct new client with the flag url
 	// and default backoff policy
-	cli := cony.NewClient(
-		cony.URL(r.addr),
-		cony.Backoff(cony.DefaultBackoff),
-	)
+	cli := r.cli
 
 	// Declarations
 	de := r.Declare(qe)
@@ -193,19 +189,6 @@ func (r *RabbitMQ) NewPublisher(qe QueueExchange) *Publisher {
 	pbl := cony.NewPublisher(de.exc.Name, qe.RoutingKey)
 	cli.Publish(pbl)
 
-	// Client loop sends out declarations(exchanges, queues, bindings
-	// etc) to the AMQP server. It also handles reconnecting.
-	go func() {
-		for cli.Loop() {
-			select {
-			case err := <-cli.Errors():
-				fmt.Printf("Publisher Client error: %v\n", err)
-			case blocked := <-cli.Blocking():
-				fmt.Printf("Publisher Client is blocked %v\n", blocked)
-			}
-		}
-	}()
-
 	return &Publisher{
 		cli: cli,
 		qe:  qe,
@@ -215,7 +198,7 @@ func (r *RabbitMQ) NewPublisher(qe QueueExchange) *Publisher {
 }
 
 //Pub 发布消息
-func (p *Publisher) Pub(data []byte) {
+func (p *Publisher) Pub(data []byte) error {
 	var err error
 
 	// 发送任务消息
@@ -223,8 +206,6 @@ func (p *Publisher) Pub(data []byte) {
 		ContentType: "text/plain",
 		Body:        data,
 	})
-	if err != nil {
-		fmt.Printf("Client publish error: %v\n", err)
-		return
-	}
+
+	return err
 }

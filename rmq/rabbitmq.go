@@ -30,6 +30,13 @@ type QueueExchange struct {
 	ExchangeType string // 交换机类型
 }
 
+//Declarer 定义
+type Declarer struct {
+	que *cony.Queue   // 队列名称
+	exc cony.Exchange // 交换机名称
+	bnd cony.Binding  //
+}
+
 //NewRMQ 创建rmq
 func NewRMQ(addr string) *RMQ {
 	// Construct new client with the flag url
@@ -43,38 +50,49 @@ func NewRMQ(addr string) *RMQ {
 		cli:  cli,
 		addr: addr,
 	}
-	// rmq.connect()
+
+	go rmq.Loop()
+
 	return rmq
 }
 
-//BindQueue 绑定队列
-func (r *RMQ) BindQueue(exchangeName, exchangeType, routingKey, queueName string) {
-	// Declarations
-	// The queue name will be supplied by the AMQP server
-	que := &cony.Queue{
-		AutoDelete: false,
-		Name:       queueName,
+//Loop 循环
+func (r *RMQ) Loop() {
+	cli := r.cli
+	for cli.Loop() {
+		select {
+		case err := <-cli.Errors():
+			fmt.Printf("Client error: %v\n", err)
+		case blocked := <-cli.Blocking():
+			fmt.Printf("Client is blocked %v\n", blocked)
+		}
 	}
-	exc := cony.Exchange{
-		Name:       exchangeName,
-		Kind:       exchangeType,
-		AutoDelete: false,
-	}
-	bnd := cony.Binding{
-		Queue:    que,
-		Exchange: exc,
-		Key:      routingKey,
-	}
-
-	r.cli.Declare([]cony.Declaration{
-		cony.DeclareQueue(que),
-		cony.DeclareExchange(exc),
-		cony.DeclareBinding(bnd),
-	})
 }
 
-//InitPaper 初始化
-func (r *RMQ) InitPaper(qe QueueExchange) *Paper {
+//BindQueue 绑定队列（创建队列）
+func (r *RMQ) BindQueue(exchangeName, exchangeType, routingKey, queueName string) {
+	qe := QueueExchange{
+		QueueName:    queueName,
+		RoutingKey:   routingKey,
+		ExchangeName: exchangeName,
+		ExchangeType: exchangeType,
+	}
+	de := r.Declare(qe)
+	if qe.QueueName == "" {
+		r.cli.Declare([]cony.Declaration{
+			cony.DeclareExchange(de.exc),
+		})
+	} else {
+		r.cli.Declare([]cony.Declaration{
+			cony.DeclareQueue(de.que),
+			cony.DeclareExchange(de.exc),
+			cony.DeclareBinding(de.bnd),
+		})
+	}
+}
+
+//Declare 定义队列或交换机
+func (r *RMQ) Declare(qe QueueExchange) Declarer {
 	// Declarations
 	// The queue name will be supplied by the AMQP server
 	que := &cony.Queue{
@@ -94,13 +112,30 @@ func (r *RMQ) InitPaper(qe QueueExchange) *Paper {
 		Key:      qe.RoutingKey,
 	}
 
-	r.cli.Declare([]cony.Declaration{
-		cony.DeclareQueue(que),
-		cony.DeclareExchange(exc),
-		cony.DeclareBinding(bnd),
-	})
+	return Declarer{
+		que: que,
+		exc: exc,
+		bnd: bnd,
+	}
 
-	r.cli.Loop()
+}
+
+//InitPaper 初始化
+func (r *RMQ) InitPaper(qe QueueExchange) *Paper {
+	// Declarations
+	de := r.Declare(qe)
+
+	if qe.QueueName == "" {
+		r.cli.Declare([]cony.Declaration{
+			cony.DeclareExchange(de.exc),
+		})
+	} else {
+		r.cli.Declare([]cony.Declaration{
+			cony.DeclareQueue(de.que),
+			cony.DeclareExchange(de.exc),
+			cony.DeclareBinding(de.bnd),
+		})
+	}
 
 	paper := &Paper{
 		mq:           r,
@@ -108,13 +143,13 @@ func (r *RMQ) InitPaper(qe QueueExchange) *Paper {
 		routingKey:   qe.RoutingKey,
 		exchangeName: qe.ExchangeName,
 		exchangeType: qe.ExchangeType,
-		que:          que,
-		exc:          exc,
-		bnd:          bnd,
+		que:          de.que,
+		exc:          de.exc,
+		bnd:          de.bnd,
 	}
 
 	// 注册生产者
-	pbl := cony.NewPublisher(exc.Name, qe.RoutingKey)
+	pbl := cony.NewPublisher(de.exc.Name, qe.RoutingKey)
 	r.cli.Publish(pbl)
 	paper.pbl = pbl
 
